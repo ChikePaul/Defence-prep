@@ -1,0 +1,6 @@
+{
+  "name": "SIWES Defense Prep & IT Internship Drill AI",
+  "description": "Interactive 400-level SIWES IT internship defense simulator. Generate targeted technical quizzes, realistic multi-examiner mock oral defenses, and trap question drills from student logbooks and technical reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
