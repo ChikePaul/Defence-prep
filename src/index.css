@@ -2,24 +2,54 @@
 
 @layer base {
   :root {
-    --color-cool-bg: #070a12;
-    --color-cool-surface: #0b111e;
-    --color-cool-surface-raised: #10192b;
-    --color-cool-border: #1a263d;
-    --color-cyan-glow: rgba(6, 182, 212, 0.35);
-    --color-indigo-glow: rgba(99, 102, 241, 0.35);
+    --bg-main: #0F1118;
+    --bg-card: #1A1D2B;
+    --primary: #3B82F6;
+    --accent: #06B6D4;
+    --highlight: #10B981;
+    --text-heading: #FFFFFF;
+    --text-body: #D1D5DB;
+    --text-muted: #6B7280;
+    --border: #2E3447;
+
+    /* Component variable mappings */
+    --bg-surface: #1A1D2B;
+    --bg-surface-elevated: #24293D;
+    --bg-surface-subtle: #131622;
+    --border-main: #2E3447;
+    --border-highlight: #3F4761;
+    --accent-primary: #3B82F6;
+    --accent-secondary: #06B6D4;
+    --accent-gold: #10B981;
+    --text-primary: #FFFFFF;
+    --text-secondary: #D1D5DB;
   }
 
   body {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #070a12;
-    color: #e2e8f0;
+    background-color: var(--bg-main);
+    color: var(--text-body);
+    font-family: sans-serif;
     overflow-x: hidden;
   }
 
-  h1, h2, h3, .font-display {
-    font-family: 'Syne', 'Plus Jakarta Sans', sans-serif;
-    letter-spacing: -0.025em;
+  h1, h2, h3 {
+    color: var(--text-heading);
+    letter-spacing: -0.02em;
+  }
+
+  a, button {
+    background-color: var(--primary);
+    color: #FFFFFF;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+  }
+
+  a:hover, button:hover {
+    background-color: var(--accent);
   }
 
   code, pre, .font-mono {
@@ -42,49 +72,4 @@
 
 .rotate-y-180 {
   transform: rotateY(180deg);
-}
-
-/* Cool Modern Glowing Accents */
-.glow-cyan {
-  box-shadow: 0 0 30px -5px rgba(6, 182, 212, 0.35);
-}
-
-.glow-indigo {
-  box-shadow: 0 0 30px -5px rgba(99, 102, 241, 0.35);
-}
-
-.glow-teal {
-  box-shadow: 0 0 30px -5px rgba(20, 184, 166, 0.3);
-}
-
-/* Animated Shimmer & Gradient Flow */
-@keyframes cool-gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.animate-cool-flow {
-  background-size: 200% 200%;
-  animation: cool-gradient-shift 8s ease infinite;
-}
-
-/* Custom Sleek Cool-Tone Scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #080c14;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1b263b;
-  border-radius: 9999px;
-  border: 1px solid #283754;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #2b3d60;
 }

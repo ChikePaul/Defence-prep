@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Student candidate user profile authenticated with Firebase Auth.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth user ID" },
+        "displayName": { "type": "string", "description": "Student display name" },
+        "email": { "type": "string", "description": "Student email address" },
+        "photoURL": { "type": "string", "description": "Profile picture URL" },
+        "matricNo": { "type": "string", "description": "Matriculation number" },
+        "institution": { "type": "string", "description": "Higher institution" },
+        "department": { "type": "string", "description": "Academic department" },
+        "companyName": { "type": "string", "description": "SIWES employer organization" },
+        "unitAttached": { "type": "string", "description": "Technical unit" },
+        "createdAt": { "type": "string", "description": "ISO timestamp" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp" }
+      },
+      "required": ["uid", "email"]
+    },
+    "StudentProgress": {
+      "title": "StudentProgress",
+      "description": "Student defense preparation progress and earned honors badges.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner student user ID" },
+        "unlockedBadges": { "type": "string", "description": "JSON serialized list of unlocked badges" },
+        "readinessScore": { "type": "number", "description": "Last readiness audit score" },
+        "quizHighScore": { "type": "number", "description": "High score in CBT quizzes" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp" }
+      },
+      "required": ["userId"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Multi-turn Gemini chatbot conversation message for SIWES defense coaching.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Message UUID" },
+        "userId": { "type": "string", "description": "Student user ID" },
+        "sender": { "type": "string", "description": "student or model" },
+        "text": { "type": "string", "description": "Message text content" },
+        "timestamp": { "type": "number", "description": "Epoch timestamp" },
+        "role": { "type": "string", "description": "Chatbot persona/role" }
+      },
+      "required": ["id", "userId", "sender", "text", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "UserProfile" },
+      "description": "Student candidate user profile document"
+    },
+    "/users/{userId}/progress/current": {
+      "schema": { "$ref": "StudentProgress" },
+      "description": "User defense mastery and unlocked honors"
+    },
+    "/users/{userId}/chatHistory/{messageId}": {
+      "schema": { "$ref": "ChatMessage" },
+      "description": "Multi-turn Gemini defense coach conversation history"
+    }
+  }
+}

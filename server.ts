@@ -637,6 +637,187 @@ Return JSON in this format:
   }
 });
 
+// 7. Multi-Turn Gemini Defense Drill Coach Chatbot
+app.post("/api/chat-coach", async (req: Request, res: Response) => {
+  try {
+    const {
+      messages = [],
+      role = "chief_examiner",
+      modelName = "gemini-3.5-flash",
+      profileContext = "",
+    } = req.body;
+
+    // Define strict role personas based on user selection
+    let systemInstruction = "";
+    if (role === "chief_examiner") {
+      systemInstruction = `You are Prof. I. A. Adebayo, Chief SIWES Defense Panel Chairman and Senior Faculty Dean in Nigerian Universities (UNILAG/OAU/ABU/FUTA benchmark).
+Your role: Interrogate the 400L student rigorously on technical depth, system architecture, database design, and actual hands-on industrial contributions. Probe whether they truly wrote the code/configured the systems themselves or just observed. Point out weak justifications, praise precise engineering answers, and ask sharp follow-up questions.`;
+    } else if (role === "industry_mentor") {
+      systemInstruction = `You are Engr. Danladi, Principal DevOps & Cloud Infrastructure Lead and seasoned SIWES Industry Supervisor.
+Your role: Test the student on real-world IT practices: disaster recovery, production failure incidents, monitoring, CI/CD, Git branching, workplace ethics, and industrial safety (HSE). Provide constructive feedback and practical industry advice.`;
+    } else if (role === "rebuttal_coach") {
+      systemInstruction = `You are Dr. Nwosu, University SIWES Defense Coach and Master of Academic Rebuttals.
+Your role: Help the 400L student frame their answers using the STAR framework (Situation, Task, Action, Result). Teach them how to answer trap questions, pivot gracefully when an examiner is aggressive, and formulate crisp 60-second answers with quantified metrics.`;
+    } else {
+      systemInstruction = `You are an expert SIWES 400-Level Defense Coach and Technical Reviewer. Guide the student to excel in their industrial training defense before the departmental panel.`;
+    }
+
+    if (profileContext) {
+      systemInstruction += `\n\nCandidate's SIWES Profile & Dossier Context:\n${profileContext}`;
+    }
+
+    // Determine target model
+    let targetModel = "gemini-3.5-flash";
+    if (modelName === "gemini-3.1-pro-preview") {
+      targetModel = "gemini-3.1-pro-preview";
+    } else if (modelName === "gemini-3.1-flash-lite") {
+      targetModel = "gemini-3.1-flash-lite";
+    } else {
+      targetModel = "gemini-3.5-flash";
+    }
+
+    // Build multi-turn contents array for @google/genai
+    const contents = messages.map((m: { sender: string; text: string }) => ({
+      role: m.sender === "student" ? "user" : "model",
+      parts: [{ text: m.text }],
+    }));
+
+    const response = await ai.models.generateContent({
+      model: targetModel,
+      contents,
+      config: {
+        systemInstruction,
+        temperature: 0.7,
+      },
+    });
+
+    const reply = response.text || "I have noted your submission. What specific engineering architecture did you implement?";
+    res.json({ success: true, reply, modelUsed: targetModel });
+  } catch (error: any) {
+    console.error("Error in chat-coach endpoint:", error);
+    res.status(500).json({ success: false, error: error.message || "Failed to generate chat response" });
+  }
+});
+
+// 8. Audio Transcription with gemini-3.5-transcribe
+app.post("/api/transcribe-audio", async (req: Request, res: Response) => {
+  try {
+    const { audioData, mimeType = "audio/webm" } = req.body;
+
+    if (!audioData) {
+      return res.status(400).json({ success: false, error: "Audio data is required" });
+    }
+
+    // Strip data URL prefix if present
+    const base64Data = audioData.includes(",") ? audioData.split(",")[1] : audioData;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-transcribe",
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              mimeType: mimeType || "audio/webm",
+              data: base64Data,
+            },
+          },
+          {
+            text: "Transcribe this student's SIWES defense speech or presentation recording verbatim. Maintain accurate technical terminology, acronyms (e.g. API, SQL, Docker, AWS, ITF), and clean punctuation.",
+          },
+        ],
+      },
+    });
+
+    const transcription = response.text || "";
+    res.json({ success: true, transcription });
+  } catch (error: any) {
+    console.error("Error in transcribe-audio endpoint:", error);
+    res.status(500).json({ success: false, error: error.message || "Audio transcription failed" });
+  }
+});
+
+// 9. Google Search Grounding with gemini-3.5-flash (with googleSearch tool)
+app.post("/api/search-grounding", async (req: Request, res: Response) => {
+  try {
+    const { query, department = "Computer Science / IT", context = "" } = req.body;
+
+    if (!query) {
+      return res.status(400).json({ success: false, error: "Search query is required" });
+    }
+
+    const prompt = `
+You are a SIWES Academic and Technical Research Advisor for 400-Level IT/Engineering students in Nigeria.
+Use Google Search grounding to retrieve current, authoritative, and accurate industry standards, framework releases, ITF/NUC SIWES policies, or technical documentation.
+
+Student Department: ${department}
+Context from Dossier: ${context || "None"}
+User Query: ${query}
+
+Provide a comprehensive, accurate, and actionable answer. Highlight technical specifications, current best practices, and practical tips the student can quote during their oral defense.
+`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }],
+        temperature: 0.5,
+      },
+    });
+
+    const text = response.text || "No response received.";
+    const candidate = response.candidates?.[0];
+    const groundingMetadata = candidate?.groundingMetadata || null;
+
+    res.json({
+      success: true,
+      text,
+      groundingMetadata,
+    });
+  } catch (error: any) {
+    console.error("Error in search-grounding endpoint:", error);
+    res.status(500).json({ success: false, error: error.message || "Search grounding failed" });
+  }
+});
+
+// 10. Voice Conversations with gemini-3.8-live (Live API endpoint)
+app.post("/api/live-defense-turn", async (req: Request, res: Response) => {
+  try {
+    const { studentUtterance, history = [], examinerRole = "academic", profileContext = "" } = req.body;
+
+    const systemInstruction = `You are participating in a real-time oral defense conversation using Gemini Live for a 400-level Nigerian SIWES internship defense.
+Persona: ${examinerRole === "engineer" ? "Engr. Danladi (Technical Industry Lead)" : examinerRole === "coordinator" ? "Dr. Nwosu (SIWES Coordinator)" : "Prof. Adebayo (Chief Defense Examiner)"}.
+Keep responses conversational, spoken, concise (2-4 sentences max), sharp, and engaging.
+${profileContext ? `Student SIWES Dossier: ${profileContext}` : ""}`;
+
+    const contents = [
+      ...history.map((h: { sender: string; text: string }) => ({
+        role: h.sender === "student" ? "user" : "model",
+        parts: [{ text: h.text }],
+      })),
+      {
+        role: "user",
+        parts: [{ text: studentUtterance }],
+      },
+    ];
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.8-live",
+      contents,
+      config: {
+        systemInstruction,
+        temperature: 0.7,
+      },
+    });
+
+    const reply = response.text || "Please elaborate on your architectural design.";
+    res.json({ success: true, reply });
+  } catch (error: any) {
+    console.error("Error in live-defense-turn endpoint:", error);
+    res.status(500).json({ success: false, error: error.message || "Live API conversation turn failed" });
+  }
+});
+
 // Vite middleware or static serving
 if (process.env.NODE_ENV !== "production") {
   const { createServer: createViteServer } = await import("vite");
